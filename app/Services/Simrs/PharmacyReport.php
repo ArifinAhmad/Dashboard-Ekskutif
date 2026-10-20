@@ -168,18 +168,34 @@ class PharmacyReport
         $join = $isClinic ? 'INNER JOIN poliklinik x ON x.kd_poli = r.kd_poli' : 'INNER JOIN dokter x ON x.kd_dokter = r.kd_dokter';
         $key = $isClinic ? 'x.kd_poli' : 'x.kd_dokter';
         $label = $isClinic ? 'x.nm_poli' : 'x.nm_dokter';
-        $query = fn (string $status) => $this->simrs->select("SELECT {$key} AS kode, {$label} AS unit, b.kode_brng, b.nama_brng, SUM(d.jml) AS jumlah, SUM(d.total - d.embalase - d.tuslah) AS biaya_obat, SUM(d.embalase) AS embalase, SUM(d.tuslah) AS tuslah, SUM(d.total) AS total FROM detail_pemberian_obat d INNER JOIN reg_periksa r ON r.no_rawat = d.no_rawat {$join} INNER JOIN databarang b ON b.kode_brng = d.kode_brng WHERE r.tgl_registrasi >= ? AND r.tgl_registrasi < ? {$status} GROUP BY {$key}, {$label}, b.kode_brng, b.nama_brng ORDER BY unit, b.nama_brng", [$from->toDateString(), $to->addDay()->toDateString()]);
-        $all = $query($isClinic ? "AND d.status = 'Ralan'" : '');
+        $statusSelect = $isClinic ? "SUM(d.status = 'Ralan') AS ralan, SUM(d.status <> 'Ralan' OR d.status IS NULL) AS ranap_lain" : "SUM(d.status = 'Ralan') AS ralan, SUM(d.status = 'Ranap') AS ranap";
+        $measure = fn (string $condition) => "SUM(CASE WHEN {$condition} THEN d.jml ELSE 0 END) AS jumlah_{$condition}, SUM(CASE WHEN {$condition} THEN d.total - d.embalase - d.tuslah ELSE 0 END) AS biaya_{$condition}, SUM(CASE WHEN {$condition} THEN d.embalase ELSE 0 END) AS embalase_{$condition}, SUM(CASE WHEN {$condition} THEN d.tuslah ELSE 0 END) AS tuslah_{$condition}, SUM(CASE WHEN {$condition} THEN d.total ELSE 0 END) AS total_{$condition}";
+        $rows = $this->simrs->select("SELECT {$key} AS kode, {$label} AS unit, b.kode_brng, b.nama_brng, SUM(d.jml) AS jumlah, SUM(d.total - d.embalase - d.tuslah) AS biaya_obat, SUM(d.embalase) AS embalase, SUM(d.tuslah) AS tuslah, SUM(d.total) AS total, {$measure("d.status = 'Ralan'")}, {$measure("d.status = 'Ranap'")}, {$statusSelect} FROM detail_pemberian_obat d INNER JOIN reg_periksa r ON r.no_rawat = d.no_rawat {$join} INNER JOIN databarang b ON b.kode_brng = d.kode_brng WHERE r.tgl_registrasi >= ? AND r.tgl_registrasi < ? GROUP BY {$key}, {$label}, b.kode_brng, b.nama_brng ORDER BY unit, b.nama_brng", [$from->toDateString(), $to->addDay()->toDateString()]);
+        $all = $isClinic ? $rows->filter(fn ($row) => (int) $row->ralan > 0)->map(fn ($row) => $this->medicineRow($row, 'ralan'))->values() : $rows->map(fn ($row) => $this->medicineRow($row, 'total'))->values();
         $datasets = $isClinic ? ['Obat per poliklinik' => $all] : [
             'Obat per dokter - Semua' => $all,
-            'Obat per dokter - Rawat Jalan' => $query("AND d.status = 'Ralan'"),
-            'Obat per dokter - Rawat Inap' => $query("AND d.status = 'Ranap'"),
+            'Obat per dokter - Rawat Jalan' => $rows->filter(fn ($row) => (int) $row->ralan > 0)->map(fn ($row) => $this->medicineRow($row, 'ralan'))->values(),
+            'Obat per dokter - Rawat Inap' => $rows->filter(fn ($row) => (int) $row->ranap > 0)->map(fn ($row) => $this->medicineRow($row, 'ranap'))->values(),
         ];
         $columns = ['kode' => 'Kode', 'unit' => $isClinic ? 'Poliklinik' : 'Dokter', 'kode_brng' => 'Kode Barang', 'nama_brng' => 'Nama Barang', 'jumlah' => 'Jumlah', 'biaya_obat' => 'Biaya Obat', 'embalase' => 'Embalase', 'tuslah' => 'Tuslah', 'total' => 'Total'];
         $formats = ['jumlah' => 'number', 'biaya_obat' => 'currency', 'embalase' => 'currency', 'tuslah' => 'currency', 'total' => 'currency'];
         $sections = collect($datasets)->map(fn ($rows, $title) => ['title' => $title, 'columns' => $columns, 'formats' => $formats, 'rows' => $rows])->values()->all();
 
         return ['summary' => ['Jumlah item-unit' => $all->count(), 'Total' => $all->sum('total')], 'sections' => $sections];
+    }
+
+    private function medicineRow(object $row, string $quantityKey): object
+    {
+        if ($quantityKey === 'total') {
+            return $row;
+        }
+        $source = $quantityKey === 'ralan' ? 'd_status___ralan' : 'd_status___ranap';
+        $suffix = $quantityKey === 'ralan' ? 'd_status___ralan' : 'd_status___ranap';
+        foreach (['jumlah', 'biaya_obat', 'embalase', 'tuslah', 'total'] as $key) {
+            $row->{$key} = (float) $row->{$key.'_'.$suffix};
+        }
+
+        return $row;
     }
 
     private function vendors(int $year): array

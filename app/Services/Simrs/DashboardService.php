@@ -8,11 +8,6 @@ class DashboardService
 {
     public function __construct(private ReadOnlySimrs $simrs) {}
 
-    public function hasCachedData(): bool
-    {
-        return Cache::store(config('simrs.cache_store'))->has($this->cacheKey());
-    }
-
     public function get(): array
     {
         return Cache::store(config('simrs.cache_store'))->remember($this->cacheKey(), config('simrs.cache_ttl'), function () {
@@ -81,7 +76,7 @@ class DashboardService
                     COUNT(DISTINCT r.no_rkm_medis) AS total
                 FROM reg_periksa r INNER JOIN pasien p ON p.no_rkm_medis = r.no_rkm_medis
                 WHERE r.tgl_registrasi = CURRENT_DATE
-                GROUP BY p.jk ORDER BY total DESC
+                GROUP BY p.jk ORDER BY total DESC LIMIT 10
             SQL);
 
             $geographies = $this->simrs->select(<<<'SQL'
@@ -108,7 +103,7 @@ class DashboardService
                 LEFT JOIN propinsi pr ON pr.kd_prop = p.kd_prop
                 WHERE r.tgl_registrasi = CURRENT_DATE
                 GROUP BY label
-                ORDER BY total DESC
+                ORDER BY total DESC LIMIT 10
             SQL);
 
             $educations = $this->simrs->select(<<<'SQL'
@@ -116,7 +111,7 @@ class DashboardService
                     COUNT(DISTINCT r.no_rkm_medis) AS total
                 FROM reg_periksa r INNER JOIN pasien p ON p.no_rkm_medis = r.no_rkm_medis
                 WHERE r.tgl_registrasi = CURRENT_DATE
-                GROUP BY label ORDER BY total DESC
+                GROUP BY label ORDER BY total DESC LIMIT 10
             SQL);
 
             $occupations = $this->simrs->select(<<<'SQL'
@@ -137,7 +132,21 @@ class DashboardService
                 ORDER BY total DESC LIMIT 10
             SQL);
 
-            return compact('registration', 'inpatient', 'beds', 'payers', 'ageGroups', 'genders', 'geographies', 'districtPatients', 'educations', 'occupations', 'referrals');
+            $compactRows = static fn ($rows) => collect($rows)->map(fn ($row) => (object) ['label' => (string) $row->label, 'total' => (int) $row->total])->values();
+
+            return [
+                'registration' => $registration,
+                'inpatient' => $inpatient,
+                'beds' => $beds,
+                'payers' => $compactRows($payers),
+                'ageGroups' => $compactRows($ageGroups),
+                'genders' => $compactRows($genders),
+                'geographies' => $compactRows($geographies),
+                'districtPatients' => $compactRows($districtPatients),
+                'educations' => $compactRows($educations),
+                'occupations' => $compactRows($occupations),
+                'referrals' => $compactRows($referrals),
+            ];
         });
     }
 

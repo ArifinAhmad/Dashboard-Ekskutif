@@ -11,7 +11,7 @@ class DashboardSettingsService
 
     public function get(): array
     {
-        return Cache::rememberForever(self::CACHE_KEY, function (): array {
+        return Cache::remember(self::CACHE_KEY, now()->addDay(), function (): array {
             $settings = AppSetting::query()->whereIn('key', [
                 'dashboard_refresh_seconds', 'dashboard_scroll_speed',
             ])->pluck('value', 'key');

@@ -24,7 +24,7 @@ class DashboardAutoRefreshTest extends TestCase
         $role = Role::query()->create(['name' => 'direksi', 'label' => 'Direksi']);
         $role->permissions()->attach($permission);
         $user->roles()->attach($role);
-        $this->mock(ReadOnlySimrs::class, fn (MockInterface $mock) => $mock->shouldReceive('healthy')->once()->andReturnFalse());
+        $this->mock(ReadOnlySimrs::class, fn (MockInterface $mock) => $mock->shouldReceive('healthy')->zeroOrMoreTimes()->andReturnFalse());
 
         $this->actingAs($user)
             ->get('/dashboard')

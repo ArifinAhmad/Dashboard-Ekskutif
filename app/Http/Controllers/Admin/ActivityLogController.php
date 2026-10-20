@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -20,7 +21,10 @@ class ActivityLogController extends Controller
         $logs = AuditLog::query()->with('user:id,name,email')
             ->when(($filters['type'] ?? 'all') === 'error', fn ($query) => $query->where('event', 'system.error'))
             ->when(($filters['type'] ?? 'all') === 'activity', fn ($query) => $query->where('event', '<>', 'system.error'))
-            ->when($filters['date'] ?? null, fn ($query, $date) => $query->whereDate('created_at', $date))
+            ->when($filters['date'] ?? null, function ($query, $date) {
+                $start = CarbonImmutable::createFromFormat('Y-m-d', $date)->startOfDay();
+                $query->where('created_at', '>=', $start)->where('created_at', '<', $start->addDay());
+            })
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($nested) use ($search) {
                     $nested->where('event', 'like', "%{$search}%")
