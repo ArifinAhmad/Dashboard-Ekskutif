@@ -66,6 +66,25 @@ php artisan migrate --database=<koneksi-aplikasi> --force
 
 Jangan menggunakan `--database=simrs`, `migrate:fresh`, atau `db:wipe` pada proses rilis.
 
+### Bootstrap Super Admin
+
+Sebelum seeding awal, isi kredensial melalui secret manager/environment dan jangan menyimpannya di repository atau log:
+
+```dotenv
+SUPER_ADMIN_NAME="Administrator Sistem"
+SUPER_ADMIN_EMAIL="alamat-admin-yang-disetujui"
+SUPER_ADMIN_PASSWORD="password-kuat-minimal-12-karakter"
+```
+
+Jalankan migration dan seeder hanya pada koneksi database aplikasi yang sudah diverifikasi:
+
+```bash
+php artisan migrate --database=<koneksi-aplikasi> --force
+php artisan db:seed --class=Database\\Seeders\\SuperAdminSeeder --database=<koneksi-aplikasi> --force
+```
+
+`DatabaseSeeder` juga menjalankan `RbacSeeder` lalu `SuperAdminSeeder`. Seeder bersifat idempotent, memastikan akun aktif dan role `super-admin` terpasang. Rotasi atau hapus secret bootstrap setelah provisioning sesuai kebijakan secret management.
+
 ## Infrastruktur dan Dependensi
 
 - [ ] TLS, sertifikat, DNS, web server, PHP-FPM, dan health check siap.

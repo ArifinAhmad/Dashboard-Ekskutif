@@ -14,6 +14,7 @@ Dokumen, aplikasi, checklist, dan pemetaan ini **tidak dengan sendirinya menyata
 - Security dan privacy by design sejak discovery sampai dekomisioning.
 - Data pasien diminimalkan pada layar, log, ekspor, test, dan dukungan.
 - Secret berada di environment/secret manager, tidak di repository, artifact, tiket, atau log.
+- Kredensial bootstrap super admin wajib berasal dari secret manager/environment, memakai password kuat, hanya dijalankan pada database aplikasi, dan dirotasi/dihapus setelah provisioning.
 - Seluruh trafik produksi melalui HTTPS; kontrol session dan header keamanan diverifikasi.
 - Log aktivitas dan error hanya menyimpan metadata yang diperlukan; password, token, secret, payload request, SQL mentah, dan data pasien tidak boleh dicatat. Tetapkan retensi serta purging `audit_logs` sesuai kebijakan rumah sakit agar volume terkendali.
 - Kerentanan kritis/tinggi terbuka memblokir rilis kecuali risk acceptance formal sesuai kebijakan.

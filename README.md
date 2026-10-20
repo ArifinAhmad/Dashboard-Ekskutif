@@ -30,17 +30,71 @@ npm install
 php -r "file_exists('.env') || copy('.env.example', '.env');"
 php artisan key:generate
 php artisan migrate --database=sqlite
-php artisan db:seed --class=RbacSeeder
-php artisan app:create-user
+php artisan db:seed --class=Database\Seeders\DatabaseSeeder --force
 npm run build
 php artisan serve --no-reload
 ```
 
 Isi `SIMRS_DB_*` pada `.env` untuk mengaktifkan data dashboard dan laporan. Jangan gunakan akun `root` atau akun dengan privilege tulis.
 
-## Membuat pengguna
+## Membuat Pengguna
 
-Jalankan `php artisan app:create-user`. Perintah meminta nama, email, password secara tersembunyi, dan role. Tidak ada password default yang disimpan dalam source code atau seeder.
+### Super Admin Pertama
+
+Seeder membuat akun super admin pertama dari environment. Salin `.env.example` menjadi `.env`, lalu isi kredensial melalui secret manager atau environment lokal:
+
+```dotenv
+SUPER_ADMIN_NAME="Administrator Sistem"
+SUPER_ADMIN_EMAIL="admin@rumahsakit.example"
+SUPER_ADMIN_PASSWORD="Password-Kuat!2026"
+```
+
+Password wajib minimal 12 karakter dan mengandung huruf besar, huruf kecil, angka, serta simbol. Jangan menaruh password asli di repository, dokumentasi, tiket, screenshot, atau log.
+
+Jalankan dari folder yang berisi file `artisan`:
+
+```powershell
+cd "D:\MASTER SIMRS\ORI\SIMRS-Khanza\eeksekutif\eeksekutif-laravel"
+php artisan migrate --database=sqlite --force
+php artisan db:seed --class=Database\Seeders\DatabaseSeeder --force
+```
+
+Pada PowerShell, gunakan satu backslash pada nama class. Jika hanya ingin menjalankan seeder super admin setelah role sudah tersedia:
+
+```powershell
+php artisan db:seed --class=Database\Seeders\SuperAdminSeeder --force
+```
+
+Urutan `DatabaseSeeder` adalah `RbacSeeder`, kemudian `SuperAdminSeeder`. Seeder bersifat idempotent: akun dicari berdasarkan `SUPER_ADMIN_EMAIL`, lalu diaktifkan, diverifikasi, password di-hash, dan role `super-admin` dipasang tanpa membuat duplikasi.
+
+Jika muncul `Target class [Database\\Seeders\\SuperAdminSeeder] does not exist`, jalankan:
+
+```powershell
+composer dump-autoload
+php artisan optimize:clear
+php artisan db:seed --class=Database\Seeders\SuperAdminSeeder --force
+```
+
+Pastikan file berikut ada dan namespace-nya tepat:
+
+```text
+database/seeders/SuperAdminSeeder.php
+namespace Database\Seeders;
+```
+
+Migration dan seeder hanya boleh dijalankan pada database aplikasi. Jangan gunakan `--database=simrs`; database Khanza SIMRS harus tetap read-only.
+
+Setelah login pertama berhasil, rotasi atau hapus `SUPER_ADMIN_PASSWORD` dari secret manager sesuai prosedur organisasi.
+
+### Pengguna Berikutnya
+
+Setelah super admin dapat login, pengguna berikutnya dibuat melalui menu:
+
+```text
+Administrasi → Pengguna & Role → Tambah Pengguna Baru
+```
+
+Password pengguna disimpan sebagai hash dan tidak pernah ditampilkan kembali.
 
 ## Verifikasi
 

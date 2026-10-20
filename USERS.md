@@ -22,6 +22,23 @@ Role adalah baseline; akses sebenarnya diberikan melalui permission granular sep
 
 ## Onboarding
 
+### Provisioning Super Admin Pertama
+
+Akun `super-admin` pertama dibuat melalui `database/seeders/SuperAdminSeeder.php`, bukan melalui menu aplikasi karena menu administrasi membutuhkan permission `admin.manage`.
+
+1. Isi `SUPER_ADMIN_NAME`, `SUPER_ADMIN_EMAIL`, dan `SUPER_ADMIN_PASSWORD` pada `.env` atau secret manager.
+2. Pastikan database default adalah database aplikasi, bukan koneksi `simrs`.
+3. Dari folder aplikasi yang berisi `artisan`, jalankan:
+
+   ```powershell
+   php artisan migrate --force
+   php artisan db:seed --class=Database\Seeders\DatabaseSeeder --force
+   ```
+
+4. Login memakai email bootstrap, lalu rotasi atau hapus secret password bootstrap.
+
+`DatabaseSeeder` menjalankan `RbacSeeder` lalu `SuperAdminSeeder`. Seeder idempotent berdasarkan email dan tidak membuat duplikasi. Jika PowerShell menampilkan `Target class [Database\\Seeders\\SuperAdminSeeder] does not exist`, gunakan satu backslash pada perintah class, lalu jalankan `composer dump-autoload` dan `php artisan optimize:clear` sebelum mencoba lagi. Detail deployment dan guardrail database ada di `RELEASE.md`.
+
 Super-admin dapat membuka menu **Administrasi > Pengguna & Role** atau URL `/administrasi/akses` untuk:
 
 - Membuat pengguna baru dengan password kuat dan satu atau lebih role.
