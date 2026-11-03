@@ -10,6 +10,7 @@ use App\Services\Simrs\ReadOnlySimrs;
 use App\Services\Simrs\ReportManager;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\CarbonImmutable;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -90,6 +91,42 @@ class ReportController extends Controller
             'logoDataUri' => $branding->logoDataUri(),
             'hospital' => $branding->hospitalProfile(),
         ])->setPaper('a4', 'landscape')->download("{$module}-{$report}-{$from->toDateString()}-{$to->toDateString()}.pdf");
+    }
+
+    public function data(ReportFilterRequest $request, string $module, string $report, ReadOnlySimrs $simrs, ReportManager $reports): JsonResponse
+    {
+        [$moduleConfig, $reportConfig] = $this->configuration($module, $report);
+        abort_unless($request->user()->hasPermission($moduleConfig['permission']), 403);
+        abort_unless($reportConfig['implemented'] ?? false, 503);
+        $validated = validator($request->query(), [
+            'section' => ['required', 'integer', 'min:0'],
+            'page' => ['required', 'integer', 'min:2'],
+            'sort' => ['nullable', 'string', 'max:100'],
+            'direction' => ['nullable', 'in:asc,desc'],
+        ])->validate();
+        $today = now()->toDateString();
+        $from = CarbonImmutable::parse($request->validated('from', $today));
+        $to = CarbonImmutable::parse($request->validated('to', $today));
+        abort_if($from->diffInDays($to) > config('simrs.date_range_max_days'), 422, 'Rentang tanggal terlalu besar.');
+        abort_unless($reports->has($module, $report, $from, $to) || $simrs->healthy(), 503);
+
+        $result = $reports->get($module, $report, $from, $to);
+        $sectionIndex = (int) $validated['section'];
+        abort_unless(isset($result['sections'][$sectionIndex]), 404);
+        $query = [
+            'section_page' => [$sectionIndex => (int) $validated['page']],
+            'section_sort' => [$sectionIndex => $validated['sort'] ?? null],
+            'section_direction' => [$sectionIndex => $validated['direction'] ?? 'asc'],
+        ];
+        $section = $this->paginateSections($result['sections'], $query)[$sectionIndex];
+
+        return response()->json([
+            'html' => view('reports.partials.rows', ['section' => $section])->render(),
+            'page' => $section['page'],
+            'last_page' => $section['last_page'],
+            'shown' => min($section['row_offset'] + collect($section['rows'])->count(), $section['total_rows']),
+            'total' => $section['total_rows'],
+        ]);
     }
 
     private function configuration(string $module, string $report): array

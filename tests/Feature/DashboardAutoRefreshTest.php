@@ -27,12 +27,15 @@ class DashboardAutoRefreshTest extends TestCase
         $this->mock(ReadOnlySimrs::class, fn (MockInterface $mock) => $mock->shouldReceive('healthy')->zeroOrMoreTimes()->andReturnFalse());
 
         $this->actingAs($user)
-            ->get('/dashboard')
+            ->get('/dashboard?from=2026-11-01&to=2026-11-03')
             ->assertOk()
             ->assertSee('data-dashboard-refresh="600"', false)
             ->assertSee('data-refresh-countdown', false)
             ->assertSee('data-auto-scroll-toggle', false)
             ->assertSee('data-auto-scroll-status', false)
-            ->assertSee('10:00');
+            ->assertSee('10:00')
+            ->assertSee('value="2026-11-01"', false)
+            ->assertSee('value="2026-11-03"', false)
+            ->assertSee('01/11/2026 sampai 03/11/2026');
     }
 }

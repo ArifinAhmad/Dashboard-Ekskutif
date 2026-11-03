@@ -61,6 +61,8 @@ Dilarang berbagi akun, password, MFA, session, file ekspor, atau perangkat login
 
 ## Cara Menggunakan Laporan
 
+Dashboard utama menyediakan filter periode **Dari** dan **Sampai**. Default keduanya adalah tanggal saat dashboard dibuka. Registrasi, pembayaran, demografi, rujukan, peta, pasien masuk, keluar, dan meninggal mengikuti periode terpilih. Pasien rawat inap aktif serta ketersediaan tempat tidur tetap merupakan snapshot kondisi saat ini dan ditandai pada tampilan.
+
 - Pastikan judul, definisi KPI, periode, timezone, filter, unit, dan timestamp pembaruan sebelum mengambil keputusan.
 - Gunakan tanggal tampilan Indonesia; URL/request menyimpan tanggal ISO `YYYY-MM-DD` agar konsisten.
 - Terapkan filter sesempit yang diperlukan. Rentang besar dapat dialihkan ke ekspor asinkron.

@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Services\Simrs\DashboardService;
 use App\Services\Simrs\ReadOnlySimrs;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Mockery\MockInterface;
@@ -31,7 +32,7 @@ class DashboardDemographicsTest extends TestCase
             });
         });
 
-        $result = app(DashboardService::class)->get();
+        $result = app(DashboardService::class)->get(CarbonImmutable::parse('2026-11-01'), CarbonImmutable::parse('2026-11-03'));
 
         foreach (['ageGroups', 'genders', 'geographies', 'districtPatients', 'educations', 'occupations', 'referrals'] as $key) {
             $this->assertArrayHasKey($key, $result);

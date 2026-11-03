@@ -188,6 +188,59 @@ document.querySelectorAll('.app-modal').forEach((modal) => {
     });
 });
 
+document.querySelectorAll('[data-load-more-table]').forEach((container) => {
+    const button = container.querySelector('[data-load-more-url]');
+    const tbody = container.querySelector('tbody');
+    const shown = container.querySelector('[data-shown-count]');
+    if (!button || !tbody) return;
+
+    let controller;
+    button.addEventListener('click', async () => {
+        if (button.disabled) return;
+        controller?.abort();
+        controller = new AbortController();
+        const label = button.querySelector('span');
+        const original = label?.textContent;
+        button.disabled = true;
+        button.classList.add('loading');
+        if (label) label.textContent = 'Memuat data...';
+
+        const params = new URLSearchParams({
+            from: button.dataset.from,
+            to: button.dataset.to,
+            section: button.dataset.section,
+            page: button.dataset.page,
+            direction: button.dataset.direction || 'asc',
+        });
+        if (button.dataset.sort) params.set('sort', button.dataset.sort);
+
+        try {
+            const response = await fetch(`${button.dataset.loadMoreUrl}?${params}`, {
+                headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                signal: controller.signal,
+            });
+            if (!response.ok) throw new Error('Gagal memuat data berikutnya.');
+            const payload = await response.json();
+            tbody.insertAdjacentHTML('beforeend', payload.html);
+            button.dataset.page = String(payload.page + 1);
+            if (shown) shown.textContent = payload.shown.toLocaleString('id-ID');
+            if (payload.page >= payload.last_page) {
+                button.remove();
+                return;
+            }
+            if (label) label.textContent = original;
+            button.disabled = false;
+            button.classList.remove('loading');
+        } catch (error) {
+            if (error.name === 'AbortError') return;
+            if (label) label.textContent = 'Coba lagi';
+            button.title = error.message;
+            button.disabled = false;
+            button.classList.remove('loading');
+        }
+    });
+});
+
 const normalizeRegion = (value) => String(value ?? '')
     .toUpperCase()
     .normalize('NFD')

@@ -19,10 +19,11 @@
 
 <div class="page-heading dashboard-heading">
     @if($applicationLogoUrl)<div class="page-logo"><img src="{{ $applicationLogoUrl }}" alt="Logo {{ config('app.name') }}"></div>@endif
-    <div><span class="eyebrow">RINGKASAN HARI INI</span><h1>Operasional rumah sakit</h1><p>Pantau arus pasien, status pelayanan, dan rawat inap dalam satu pandangan.</p></div>
+    <div><span class="eyebrow">RINGKASAN PERIODE</span><h1>Operasional rumah sakit</h1><p>Pantau arus pasien dan pelayanan periode {{ $from->format('d/m/Y') }} sampai {{ $to->format('d/m/Y') }}.</p></div>
     <span class="status {{ $connected ? 'ok' : 'error' }}">{{ $connected ? 'SIMRS terhubung' : 'SIMRS tidak terhubung' }}</span>
 </div>
 <div class="dashboard-refresh-banner">Pembaruan otomatis dashboard dalam <strong data-refresh-countdown>{{ sprintf('%02d:00', intdiv($settings['refresh_seconds'], 60)) }}</strong></div>
+<form method="GET" class="dashboard-period-filter"><div><span class="eyebrow">PERIODE DATA</span><strong>{{ $from->translatedFormat('d M Y') }} - {{ $to->translatedFormat('d M Y') }}</strong></div><label>Dari<input type="date" name="from" value="{{ $from->toDateString() }}" required></label><label>Sampai<input type="date" name="to" value="{{ $to->toDateString() }}" required></label><button class="button primary" type="submit">Tampilkan</button><a class="button secondary" href="{{ route('dashboard') }}">Hari Ini</a></form>
 
 @if(!$connected)
     <div class="alert warning"><strong>Mode tanpa sumber data.</strong> Isi konfigurasi `SIMRS_DB_*` dengan akun read-only untuk menampilkan indikator.</div>
@@ -31,14 +32,14 @@
         $registration = $data['registration'];
         $inpatient = $data['inpatient'];
         $metrics = [
-            ['Registrasi', $registration->total ?? 0, 'Pasien hari ini', 'patients', 'orange'],
+            ['Registrasi', $registration->total ?? 0, 'Periode terpilih', 'patients', 'orange'],
             ['Rawat jalan', $registration->rawat_jalan ?? 0, 'Kunjungan poli', 'stethoscope', 'green'],
             ['IGD', $registration->igd ?? 0, 'Kunjungan darurat', 'emergency', 'red'],
             ['Rawat inap aktif', $inpatient->aktif ?? 0, 'Pasien dirawat', 'bed', 'teal'],
             ['Pasien baru', $registration->pasien_baru ?? 0, 'Registrasi baru', 'user-plus', 'amber'],
             ['Terlayani', $registration->terlayani ?? 0, 'Selesai dilayani', 'check', 'emerald'],
-            ['Sudah bayar', $registration->sudah_bayar ?? 0, 'Rawat jalan hari ini', 'wallet', 'green'],
-            ['Belum bayar', $registration->belum_bayar ?? 0, 'Rawat jalan hari ini', 'clock', 'orange'],
+            ['Sudah bayar', $registration->sudah_bayar ?? 0, 'Rawat jalan periode', 'wallet', 'green'],
+            ['Belum bayar', $registration->belum_bayar ?? 0, 'Rawat jalan periode', 'clock', 'orange'],
         ];
         $serviceTotal = max(1, (int) ($registration->rawat_jalan ?? 0) + (int) ($registration->igd ?? 0));
         $patientTotal = max(1, (int) ($registration->pasien_baru ?? 0) + (int) ($registration->pasien_lama ?? 0));
@@ -126,7 +127,7 @@
     </section>
 
     <section class="dashboard-section" aria-labelledby="patient-profile-title">
-        <div class="section-heading"><div><span class="eyebrow">PROFIL PASIEN</span><h2 id="patient-profile-title">Pasien terregistrasi hari ini</h2></div><span>Pasien unik berdasarkan nomor rekam medis</span></div>
+        <div class="section-heading"><div><span class="eyebrow">PROFIL PASIEN</span><h2 id="patient-profile-title">Pasien terregistrasi pada periode</h2></div><span>Pasien unik berdasarkan nomor rekam medis</span></div>
         <div class="demographic-grid">
             @foreach([
                 ['Kelompok usia', 'Distribusi umur pasien', collect($data['ageGroups'] ?? []), 'usia'],
@@ -149,7 +150,7 @@
     </section>
 
     <section class="dashboard-section" aria-labelledby="geographic-map-title">
-        <div class="section-heading"><div><span class="eyebrow">PETA SEBARAN NTB</span><h2 id="geographic-map-title">Geografis pasien terregistrasi</h2></div><span>Kabupaten/kota NTB dan pasien dari luar NTB</span></div>
+        <div class="section-heading"><div><span class="eyebrow">PETA SEBARAN NTB</span><h2 id="geographic-map-title">Geografis pasien terregistrasi</h2></div><span>Periode {{ $from->format('d/m/Y') }} - {{ $to->format('d/m/Y') }}</span></div>
         <article class="panel patient-map-card">
             <div class="patient-map" data-patient-map data-areas='@json(collect($data['districtPatients'] ?? [])->map(fn ($row) => ['name' => $row->label, 'total' => (int) $row->total])->values())' role="img" aria-label="Peta batas kabupaten dan kota Indonesia dengan jumlah pasien"></div>
             <aside class="map-region-list">
