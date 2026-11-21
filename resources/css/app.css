@@ -281,3 +281,55 @@ html[data-theme=dark] .report-heading{background:linear-gradient(110deg,#124d32,
 html[data-theme=dark] .report-panel-head,html[data-theme=dark] .modal-head{background:linear-gradient(90deg,#193b2b,#402b20)}
 html[data-theme=dark] .report-panel table thead th{background:linear-gradient(180deg,#1e3c2c,#193226);color:#9ce0b9}
 html[data-theme=dark] .report-panel tbody tr:hover{background:#35271e}
+
+/* Stable report load-more footer across production viewport and CSS builds. */
+.report-panel .load-more-pagination{
+    position:static;
+    left:auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    min-height:64px;
+    padding:12px 16px;
+    border-top:1px solid var(--line);
+    background:linear-gradient(90deg,var(--panel),var(--green-soft));
+    color:var(--muted);
+}
+.report-panel .load-more-pagination>span{display:block;min-width:0;font-size:11px;line-height:1.4}
+.report-panel .load-more-pagination>span>strong{color:var(--green-dark);font-size:13px;font-weight:700}
+.report-panel .load-more-button{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    flex:0 0 auto;
+    gap:9px;
+    width:auto;
+    min-width:208px;
+    min-height:42px;
+    margin:0;
+    padding:9px 16px;
+    border:0;
+    border-radius:11px;
+    background:linear-gradient(110deg,var(--rsms-orange),#e89a38 42%,var(--rsms-green));
+    color:#fff;
+    font-size:11px;
+    font-weight:700;
+    line-height:1.2;
+    text-align:center;
+    white-space:nowrap;
+    box-shadow:0 8px 20px rgba(0,122,73,.18);
+    transition:transform .16s ease,box-shadow .16s ease,filter .16s ease;
+}
+.report-panel .load-more-button:hover{background:linear-gradient(110deg,var(--rsms-orange),#e89a38 42%,var(--rsms-green));color:#fff;filter:saturate(1.08);transform:translateY(-1px);box-shadow:0 11px 25px rgba(0,122,73,.24)}
+.report-panel .load-more-button:focus-visible{outline:3px solid rgba(0,160,96,.22);outline-offset:3px}
+.report-panel .load-more-button svg{display:block;flex:0 0 auto;width:18px;height:18px;stroke-width:2.25}
+.report-panel .load-more-button.loading{filter:saturate(.7);transform:none}
+.report-panel .load-more-button[aria-disabled=true]{opacity:.72;cursor:wait}
+html[data-theme=dark] .report-panel .load-more-pagination{background:linear-gradient(90deg,var(--panel),#193529)}
+
+@media(max-width:600px){
+    .report-panel .load-more-pagination{align-items:stretch;flex-direction:column;gap:10px;padding:13px}
+    .report-panel .load-more-pagination>span{text-align:center}
+    .report-panel .load-more-button{width:100%;min-width:0;min-height:46px}
+}
