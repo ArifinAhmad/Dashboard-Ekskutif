@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Dashboard') | Dashboard {{ $hospitalProfile['name'] }}</title>
-    <script>document.documentElement.dataset.theme=localStorage.getItem('ee-theme')||'light';if(localStorage.getItem('dashboard-sidebar')==='collapsed')document.documentElement.classList.add('sidebar-collapsed');</script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body data-session-lifetime="{{ config('session.lifetime') }}" data-login-url="{{ route('login') }}">

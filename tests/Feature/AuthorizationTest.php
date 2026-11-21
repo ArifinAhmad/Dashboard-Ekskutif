@@ -34,6 +34,21 @@ class AuthorizationTest extends TestCase
             ->assertHeader('Content-Security-Policy', "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' https://static.cloudflareinsights.com; connect-src 'self' https://cloudflareinsights.com; img-src 'self' data:; font-src 'self'; frame-ancestors 'none'; form-action 'self'; base-uri 'self'");
     }
 
+    public function test_authenticated_layout_does_not_use_inline_scripts(): void
+    {
+        $user = User::factory()->create();
+        $permission = Permission::query()->create(['name' => 'dashboard.view', 'label' => 'Dashboard']);
+        $role = Role::query()->create(['name' => 'direksi', 'label' => 'Direksi']);
+        $role->permissions()->attach($permission);
+        $user->roles()->attach($role);
+
+        $this->actingAs($user)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertDontSee('<script>', false)
+            ->assertDontSee('document.documentElement.dataset.theme=', false);
+    }
+
     public function test_super_admin_has_every_permission_without_permission_pivot(): void
     {
         $user = User::factory()->create();

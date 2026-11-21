@@ -1,3 +1,6 @@
+document.documentElement.dataset.theme = localStorage.getItem('ee-theme') || 'light';
+document.documentElement.classList.toggle('sidebar-collapsed', localStorage.getItem('dashboard-sidebar') === 'collapsed');
+
 const sidebar = document.querySelector('#sidebar');
 const menuButton = document.querySelector('[data-menu-toggle]');
 const desktopSidebar = window.matchMedia('(min-width: 1001px)');
