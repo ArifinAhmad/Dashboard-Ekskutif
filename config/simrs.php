@@ -6,7 +6,7 @@ return [
     'cache_ttl' => (int) env('SIMRS_CACHE_TTL', 120),
     'dashboard_refresh_seconds' => (int) env('SIMRS_DASHBOARD_REFRESH_SECONDS', 600),
     'cache_store' => env('SIMRS_CACHE_STORE', 'file'),
-    'report_cache_version' => env('SIMRS_REPORT_CACHE_VERSION', 'v1'),
+    'report_cache_version' => env('SIMRS_REPORT_CACHE_VERSION', 'v2'),
     'report_cache_today_ttl' => (int) env('SIMRS_REPORT_CACHE_TODAY_TTL', 120),
     'report_cache_recent_ttl' => (int) env('SIMRS_REPORT_CACHE_RECENT_TTL', 900),
     'report_cache_history_ttl' => (int) env('SIMRS_REPORT_CACHE_HISTORY_TTL', 86400),

@@ -116,6 +116,18 @@ php artisan db:seed --class=Database\\Seeders\\SuperAdminSeeder --database=<kone
 8. Nonaktifkan maintenance mode setelah health check stabil.
 9. Umumkan hasil rilis dan mulai periode observasi intensif.
 
+Untuk perubahan route, Blade, JavaScript, atau CSS seperti Load More, deploy backend dan folder `public/build` dari revision yang sama. Jalankan urutan berikut setelah artifact baru aktif:
+
+```bash
+php artisan optimize:clear
+npm ci
+npm run build
+php artisan optimize
+php artisan route:list --name=reports.data
+```
+
+Pastikan route `reports.data` tampil dan `public/build/manifest.json` menunjuk hash `app.js`/`app.css` terbaru. Jangan mempromosikan source PHP baru bersama `public/build` lama, atau sebaliknya. Jika memakai Cloudflare/CDN, purge cache HTML setelah deploy; asset Vite ber-hash boleh tetap immutable. Response halaman laporan dan endpoint Load More menggunakan `private, no-store` agar HTML/JSON sensitif tidak disajikan dari cache browser/CDN.
+
 ## Smoke Test
 
 - [ ] Halaman login terbuka melalui HTTPS dan error tidak membocorkan detail internal.

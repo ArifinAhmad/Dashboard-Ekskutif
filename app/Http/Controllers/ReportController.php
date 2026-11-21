@@ -12,12 +12,11 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
-use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportController extends Controller
 {
-    public function show(ReportFilterRequest $request, string $module, string $report, ReadOnlySimrs $simrs, ReportManager $reports, AuditService $audit): View
+    public function show(ReportFilterRequest $request, string $module, string $report, ReadOnlySimrs $simrs, ReportManager $reports, AuditService $audit): Response
     {
         [$moduleConfig, $reportConfig] = $this->configuration($module, $report);
         abort_unless($request->user()->hasPermission($moduleConfig['permission']), 403);
@@ -39,7 +38,9 @@ class ReportController extends Controller
         }
         $audit->record($request, 'report.view', $module, compact('report', 'from', 'to', 'implemented'));
 
-        return view('reports.show', compact('module', 'report', 'moduleConfig', 'reportConfig', 'from', 'to', 'connected', 'implemented', 'result'));
+        return response()->view('reports.show', compact('module', 'report', 'moduleConfig', 'reportConfig', 'from', 'to', 'connected', 'implemented', 'result'))
+            ->header('Cache-Control', 'private, no-store, max-age=0')
+            ->header('Pragma', 'no-cache');
     }
 
     public function export(ReportFilterRequest $request, string $module, string $report, ReadOnlySimrs $simrs, ReportManager $reports, AuditService $audit, ReportExcelService $excel): StreamedResponse
@@ -64,7 +65,7 @@ class ReportController extends Controller
         }, $filename, [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'Cache-Control' => 'private, no-store',
-        ]);
+        ])->header('Cache-Control', 'private, no-store, max-age=0');
     }
 
     public function exportPdf(ReportFilterRequest $request, string $module, string $report, ReadOnlySimrs $simrs, ReportManager $reports, AuditService $audit, BrandingService $branding): Response
@@ -126,7 +127,7 @@ class ReportController extends Controller
             'last_page' => $section['last_page'],
             'shown' => min($section['row_offset'] + collect($section['rows'])->count(), $section['total_rows']),
             'total' => $section['total_rows'],
-        ]);
+        ])->header('Cache-Control', 'private, no-store, max-age=0');
     }
 
     private function configuration(string $module, string $report): array

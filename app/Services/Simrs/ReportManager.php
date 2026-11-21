@@ -97,7 +97,7 @@ class ReportManager
     private function cacheKey(string $module, string $report, CarbonImmutable $from, CarbonImmutable $to): string
     {
         return implode(':', [
-            'simrs', 'report', config('simrs.report_cache_version'),
+            'simrs', 'report', 'schema-v2', config('simrs.report_cache_version'),
             $module, $report, $from->toDateString(), $to->toDateString(),
         ]);
     }

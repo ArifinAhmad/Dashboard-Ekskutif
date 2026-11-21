@@ -35,7 +35,14 @@ class ReportPaginationPerformanceTest extends TestCase
 
         $response = $this->actingAs($user)->get('/laporan/pelayanan/rawat-jalan?from=2026-09-23&to=2026-09-23');
 
-        $response->assertOk()->assertSee('10</strong> dari 55 data ditampilkan', false)->assertSee('Data 10')->assertDontSee('Data 11')->assertSee('Tampilkan 10 berikutnya')->assertSee('data-load-more-url', false);
+        $response->assertOk()
+            ->assertHeader('Cache-Control', 'private, no-store, max-age=0')
+            ->assertSee('10</strong> dari 55 data ditampilkan', false)
+            ->assertSee('Data 10')
+            ->assertDontSee('Data 11')
+            ->assertSee('Tampilkan 10 berikutnya')
+            ->assertSee('data-load-more-url="/laporan/pelayanan/rawat-jalan/data"', false)
+            ->assertSee('href="http://localhost/laporan/pelayanan/rawat-jalan?', false);
     }
 
     public function test_report_rows_can_be_sorted_descending_before_pagination(): void
@@ -81,7 +88,7 @@ class ReportPaginationPerformanceTest extends TestCase
 
         $response = $this->actingAs($user)->getJson('/laporan/pelayanan/rawat-jalan/data?from=2026-09-23&to=2026-09-23&section=0&page=2');
 
-        $response->assertOk()->assertJsonPath('page', 2)->assertJsonPath('shown', 20)->assertJsonPath('total', 55);
+        $response->assertOk()->assertHeader('Cache-Control', 'private, no-store, max-age=0')->assertJsonPath('page', 2)->assertJsonPath('shown', 20)->assertJsonPath('total', 55);
         $html = $response->json('html');
         $this->assertStringContainsString('Data 11', $html);
         $this->assertStringContainsString('Data 20', $html);

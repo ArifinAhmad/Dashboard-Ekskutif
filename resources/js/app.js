@@ -195,13 +195,14 @@ document.querySelectorAll('[data-load-more-table]').forEach((container) => {
     if (!button || !tbody) return;
 
     let controller;
-    button.addEventListener('click', async () => {
+    button.addEventListener('click', async (event) => {
+        event.preventDefault();
         if (button.disabled) return;
         controller?.abort();
         controller = new AbortController();
         const label = button.querySelector('span');
         const original = label?.textContent;
-        button.disabled = true;
+        button.setAttribute('aria-disabled', 'true');
         button.classList.add('loading');
         if (label) label.textContent = 'Memuat data...';
 
@@ -229,13 +230,13 @@ document.querySelectorAll('[data-load-more-table]').forEach((container) => {
                 return;
             }
             if (label) label.textContent = original;
-            button.disabled = false;
+            button.removeAttribute('aria-disabled');
             button.classList.remove('loading');
         } catch (error) {
             if (error.name === 'AbortError') return;
             if (label) label.textContent = 'Coba lagi';
             button.title = error.message;
-            button.disabled = false;
+            button.removeAttribute('aria-disabled');
             button.classList.remove('loading');
         }
     });
