@@ -147,6 +147,6 @@ class ReportExcelService
 
     private function safeCell(string $value): string
     {
-        return preg_match('/^[=+\-@]/', $value) ? "'{$value}" : $value;
+        return preg_match('/^[=+\-@\t\r]/', $value) ? "'{$value}" : $value;
     }
 }

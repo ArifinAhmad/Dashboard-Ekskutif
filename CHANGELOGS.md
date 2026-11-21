@@ -24,6 +24,8 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/) dan
 ### Changed
 
 - Locale aplikasi menggunakan Bahasa Indonesia dan zona waktu `Asia/Jakarta`.
+- Cache dashboard SIMRS memakai TTL lima menit, default Redis, dan warming terjadwal setiap lima menit untuk mengurangi query sinkron berulang.
+- Agregasi pergerakan rawat inap dashboard menggunakan satu query terikat, bukan empat subquery terpisah.
 
 ### Deprecated
 
@@ -37,12 +39,14 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/) dan
 
 - Menu laporan kini tetap menampilkan seluruh katalog untuk super-admin; laporan yang belum memiliki query diberi label `Roadmap` dan tidak disamarkan sebagai data tersedia.
 - Database pengujian dipisahkan ke SQLite in-memory agar `RefreshDatabase` tidak lagi menghapus role atau akun pada database development.
+- Ekspor XLSX tidak lagi gagal karena penggunaan method header yang tidak tersedia pada `StreamedResponse`.
 
 ### Security
 
 - Larangan eksplisit migration dan operasi tulis pada database SIMRS didokumentasikan.
 - Persyaratan least privilege, audit, privasi, secure SDLC, pengelolaan kerentanan, backup, logging, dan pelaporan insiden didokumentasikan.
 - Session diregenerasi setelah login, logout memakai POST/CSRF, dan respons memakai CSP, HSTS saat HTTPS, anti-framing, nosniff, serta referrer policy.
+- Login dilindungi middleware rate limiter bernama dan formula XLSX yang diawali tab atau carriage return dinetralkan.
 
 ## Pedoman Entri
 

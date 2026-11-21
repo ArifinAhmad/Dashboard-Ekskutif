@@ -104,4 +104,20 @@ Beberapa pengguna super-admin melihat menu atau akses laporan tidak lengkap keti
 - PHPUnit sebelumnya mewarisi database SQLite development karena konfigurasi in-memory masih dikomentari.
 - `RefreshDatabase` dapat mengosongkan role dan akun lokal setelah test, sehingga menu super-admin hilang pada sesi berikutnya.
 - PHPUnit sekarang memaksa `DB_CONNECTION=sqlite` dan `DB_DATABASE=:memory:` agar test tidak pernah menyentuh database aplikasi lokal.
-- XLSX, PDF, ekspor asinkron, Redis/Horizon, MFA, dan administrasi pengguna belum diimplementasikan.
+- Ekspor asinkron, Horizon, dan MFA belum diimplementasikan. XLSX, PDF, administrasi pengguna, serta dukungan Redis untuk cache SIMRS sudah tersedia; deployment wajib menyediakan layanan Redis bila `SIMRS_CACHE_STORE=redis` digunakan.
+
+## 2026-11-21 - Remediasi Audit Performa Loading
+
+### Keputusan
+
+- Naikkan TTL cache dashboard dari 120 menjadi 300 detik dan gunakan Redis sebagai default konfigurasi deployment.
+- Hangatkan cache dashboard hari berjalan setiap lima menit melalui command read-only `simrs:warm-dashboard`.
+- Gabungkan empat agregasi `kamar_inap` dashboard menjadi satu query dan hilangkan `COALESCE` dari predicate stok positif.
+- Pertahankan pagination laporan saat ini; migrasi ke `LIMIT/OFFSET` SQL memerlukan kontrak summary/detail baru per query object agar layar dan ekspor tidak berbeda.
+- Pertahankan rendering dashboard sinkron pada tahap ini; endpoint widget asinkron memerlukan perubahan arsitektur, observability, dan fallback UI terpisah.
+
+### Bukti
+
+- Seluruh 53 test dengan 315 assertion lulus.
+- Scheduler mendaftarkan `simrs:warm-dashboard` setiap lima menit.
+- Pint dan build Vite lulus; audit npm tidak menemukan kerentanan.

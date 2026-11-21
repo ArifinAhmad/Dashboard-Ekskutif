@@ -36,7 +36,9 @@ class ReportExcelExportTest extends TestCase
                     'title' => 'Kunjungan',
                     'columns' => ['label' => 'Kategori', 'total' => 'Total'],
                     'formats' => ['total' => 'number'],
-                    'rows' => collect([(object) ['label' => 'Rawat Jalan', 'total' => 12]]),
+                    'rows' => collect([
+                        (object) ['label' => "\t=HYPERLINK(\"https://example.test\")", 'total' => 12],
+                    ]),
                 ]],
             ]);
         });
@@ -58,6 +60,7 @@ class ReportExcelExportTest extends TestCase
         $this->assertSame(config('app.name'), $sheet->getCell('B1')->getValue());
         $this->assertSame('PELAYANAN - RAWAT JALAN', $sheet->getCell('A4')->getValue());
         $this->assertSame('No', $sheet->getCell('A6')->getValue());
+        $this->assertSame("'\t=HYPERLINK(\"https://example.test\")", $sheet->getCell('B7')->getValue());
         $this->assertSame('FF237A50', $sheet->getStyle('A4')->getFill()->getStartColor()->getARGB());
         $this->assertSame('FF16593B', $sheet->getStyle('A6')->getFill()->getStartColor()->getARGB());
         $workbook->disconnectWorksheets();

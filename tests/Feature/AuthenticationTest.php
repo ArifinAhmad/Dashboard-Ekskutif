@@ -44,4 +44,12 @@ class AuthenticationTest extends TestCase
 
         $this->assertGuest();
     }
+
+    public function test_login_route_uses_named_throttle_middleware(): void
+    {
+        $route = app('router')->getRoutes()->getByName('login.store');
+
+        $this->assertNotNull($route);
+        $this->assertContains('throttle:login', $route->gatherMiddleware());
+    }
 }

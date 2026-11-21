@@ -64,8 +64,8 @@ class ReportController extends Controller
             $excel->download($result['sections'], $moduleConfig['label'], $reportConfig['label'], $from, $to, $filename);
         }, $filename, [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'Cache-Control' => 'private, no-store',
-        ])->header('Cache-Control', 'private, no-store, max-age=0');
+            'Cache-Control' => 'private, no-store, max-age=0',
+        ]);
     }
 
     public function exportPdf(ReportFilterRequest $request, string $module, string $report, ReadOnlySimrs $simrs, ReportManager $reports, AuditService $audit, BrandingService $branding): Response

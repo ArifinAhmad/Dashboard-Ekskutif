@@ -3,9 +3,9 @@
 return [
     'connection' => 'simrs',
     'igd_code' => env('SIMRS_IGD_CODE', 'IGDK'),
-    'cache_ttl' => (int) env('SIMRS_CACHE_TTL', 120),
+    'cache_ttl' => (int) env('SIMRS_CACHE_TTL', 300),
     'dashboard_refresh_seconds' => (int) env('SIMRS_DASHBOARD_REFRESH_SECONDS', 600),
-    'cache_store' => env('SIMRS_CACHE_STORE', 'file'),
+    'cache_store' => env('SIMRS_CACHE_STORE', 'redis'),
     'report_cache_version' => env('SIMRS_REPORT_CACHE_VERSION', 'v2'),
     'report_cache_today_ttl' => (int) env('SIMRS_REPORT_CACHE_TODAY_TTL', 120),
     'report_cache_recent_ttl' => (int) env('SIMRS_REPORT_CACHE_RECENT_TTL', 900),

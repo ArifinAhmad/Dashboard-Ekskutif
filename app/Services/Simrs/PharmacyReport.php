@@ -126,7 +126,7 @@ class PharmacyReport
             INNER JOIN kategori_barang k ON k.kode = b.kode_kategori INNER JOIN golongan_barang g ON g.kode = b.kode_golongan
             LEFT JOIN (SELECT gb.kode_brng, SUM(gb.stok) AS stok FROM gudangbarang gb INNER JOIN bangsal ba ON ba.kd_bangsal = gb.kd_bangsal WHERE ba.status = '1' AND gb.no_batch = '' AND gb.no_faktur = '' GROUP BY gb.kode_brng) st ON st.kode_brng = b.kode_brng
             LEFT JOIN (SELECT kode_brng, MAX(tanggal) AS aktivitas_terakhir FROM riwayat_barang_medis WHERE posisi <> 'Opname' GROUP BY kode_brng) mv ON mv.kode_brng = b.kode_brng
-            WHERE b.status = '1' AND COALESCE(st.stok, 0) > 0
+            WHERE b.status = '1' AND st.stok > 0
                 AND (mv.aktivitas_terakhir IS NULL OR mv.aktivitas_terakhir < DATE_SUB(CURRENT_DATE, INTERVAL 1 MONTH))
             ORDER BY aktivitas_terakhir, b.nama_brng
         SQL);

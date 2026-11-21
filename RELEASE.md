@@ -88,9 +88,11 @@ php artisan db:seed --class=Database\\Seeders\\SuperAdminSeeder --database=<kone
 ## Infrastruktur dan Dependensi
 
 - [ ] TLS, sertifikat, DNS, web server, PHP-FPM, dan health check siap.
+- [ ] Redis tersedia dan sehat untuk `SIMRS_CACHE_STORE=redis`; fallback nonproduksi ditetapkan eksplisit bila Redis tidak tersedia.
 - [ ] Database aplikasi, koneksi SIMRS read-only, cache, queue, scheduler, storage privat, mail/notifikasi, dan monitoring sehat.
 - [ ] Worker queue menggunakan revision aplikasi yang sama dengan web.
 - [ ] Scheduler berjalan tunggal sesuai topology dan housekeeping ekspor dijadwalkan.
+- [ ] `php artisan schedule:list` menampilkan `simrs:warm-dashboard` setiap lima menit dan cron menjalankan `php artisan schedule:run` setiap menit.
 - [ ] Kapasitas disk, koneksi database, memory, timeout, dan concurrency memenuhi hasil capacity test.
 - [ ] Risiko supplier/cloud dan status layanan dependency telah ditinjau.
 

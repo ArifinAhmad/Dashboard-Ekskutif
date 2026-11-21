@@ -30,11 +30,15 @@ class DashboardService
 
             $inpatient = $this->simrs->select(<<<'SQL'
                 SELECT
-                    (SELECT COUNT(DISTINCT no_rawat) FROM kamar_inap WHERE tgl_masuk >= ? AND tgl_masuk < ? AND stts_pulang <> 'Pindah Kamar') AS masuk,
-                    (SELECT COUNT(DISTINCT no_rawat) FROM kamar_inap WHERE tgl_keluar >= ? AND tgl_keluar < ? AND stts_pulang <> 'Pindah Kamar') AS keluar,
-                    (SELECT COUNT(DISTINCT no_rawat) FROM kamar_inap WHERE tgl_keluar = '0000-00-00') AS aktif,
-                    (SELECT COUNT(DISTINCT no_rawat) FROM kamar_inap WHERE tgl_keluar >= ? AND tgl_keluar < ? AND stts_pulang = 'Meninggal') AS meninggal
-            SQL, [...$dates, ...$dates, ...$dates])->first();
+                    COUNT(DISTINCT CASE WHEN tgl_masuk >= ? AND tgl_masuk < ? AND stts_pulang <> 'Pindah Kamar' THEN no_rawat END) AS masuk,
+                    COUNT(DISTINCT CASE WHEN tgl_keluar >= ? AND tgl_keluar < ? AND stts_pulang <> 'Pindah Kamar' THEN no_rawat END) AS keluar,
+                    COUNT(DISTINCT CASE WHEN tgl_keluar = '0000-00-00' THEN no_rawat END) AS aktif,
+                    COUNT(DISTINCT CASE WHEN tgl_keluar >= ? AND tgl_keluar < ? AND stts_pulang = 'Meninggal' THEN no_rawat END) AS meninggal
+                FROM kamar_inap
+                WHERE tgl_keluar = '0000-00-00'
+                    OR (tgl_masuk >= ? AND tgl_masuk < ?)
+                    OR (tgl_keluar >= ? AND tgl_keluar < ?)
+            SQL, [...$dates, ...$dates, ...$dates, ...$dates, ...$dates])->first();
 
             $beds = $this->simrs->select(<<<'SQL'
                 SELECT
