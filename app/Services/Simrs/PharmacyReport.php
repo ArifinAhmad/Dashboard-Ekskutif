@@ -51,7 +51,7 @@ class PharmacyReport
                 AND st.no_batch = '' AND st.no_faktur = ''
             WHERE b.status = '1'
             GROUP BY b.kode_brng, b.nama_brng, b.dasar, s.satuan, j.nama, k.nama, g.nama
-            ORDER BY b.kode_brng
+            ORDER BY stok DESC, b.kode_brng ASC
         SQL);
 
         return [

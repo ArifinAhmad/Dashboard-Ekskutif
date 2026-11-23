@@ -38,14 +38,15 @@ class ReportPaginationPerformanceTest extends TestCase
         $response->assertOk()
             ->assertHeaderContains('Cache-Control', 'no-store')
             ->assertSee('10</strong> dari 55 data ditampilkan', false)
-            ->assertSee('Data 10')
-            ->assertDontSee('Data 11')
+            ->assertSee('Data 55')
+            ->assertSee('Data 46')
+            ->assertDontSee('Data 45')
             ->assertSee('Tampilkan 10 berikutnya')
             ->assertSee('data-load-more-url="/laporan/pelayanan/rawat-jalan/data"', false)
             ->assertSee('href="http://localhost/laporan/pelayanan/rawat-jalan?', false);
     }
 
-    public function test_report_rows_can_be_sorted_descending_before_pagination(): void
+    public function test_report_rows_can_be_sorted_ascending_when_requested(): void
     {
         $user = User::factory()->create();
         $permission = Permission::query()->create(['name' => 'service.view', 'label' => 'Pelayanan']);
@@ -63,9 +64,32 @@ class ReportPaginationPerformanceTest extends TestCase
             ]);
         });
 
-        $response = $this->actingAs($user)->get('/laporan/pelayanan/rawat-jalan?from=2026-09-23&to=2026-09-23&section_sort[0]=total&section_direction[0]=desc');
+        $response = $this->actingAs($user)->get('/laporan/pelayanan/rawat-jalan?from=2026-09-23&to=2026-09-23&section_sort[0]=total&section_direction[0]=asc');
 
-        $response->assertOk()->assertSee('Data 55')->assertSee('Data 46')->assertDontSee('Data 45');
+        $response->assertOk()->assertSee('Data 1')->assertSee('Data 10')->assertDontSee('Data 11');
+    }
+
+    public function test_stock_report_defaults_to_highest_available_stock(): void
+    {
+        $user = User::factory()->create();
+        $permission = Permission::query()->create(['name' => 'service.view', 'label' => 'Pelayanan']);
+        $role = Role::query()->create(['name' => 'direksi', 'label' => 'Direksi']);
+        $role->permissions()->attach($permission);
+        $user->roles()->attach($role);
+        $rows = collect(range(1, 15))->map(fn ($number) => (object) ['nama_brng' => "Obat {$number}", 'stok' => $number]);
+
+        $this->mock(ReadOnlySimrs::class, fn (MockInterface $mock) => $mock->shouldReceive('healthy')->once()->andReturnTrue());
+        $this->mock(ReportManager::class, function (MockInterface $mock) use ($rows): void {
+            $mock->shouldReceive('has')->once()->andReturnFalse();
+            $mock->shouldReceive('get')->once()->andReturn([
+                'summary' => [],
+                'sections' => [['title' => 'Stok Obat', 'columns' => ['nama_brng' => 'Nama Barang', 'stok' => 'Stok'], 'formats' => ['stok' => 'number'], 'rows' => $rows]],
+            ]);
+        });
+
+        $response = $this->actingAs($user)->get('/laporan/pelayanan/rawat-jalan?from=2026-09-23&to=2026-09-23');
+
+        $response->assertOk()->assertSee('Obat 15')->assertSee('Obat 6')->assertDontSee('Obat 5');
     }
 
     public function test_load_more_endpoint_returns_the_next_ten_rows_without_page_reload(): void
@@ -90,9 +114,9 @@ class ReportPaginationPerformanceTest extends TestCase
 
         $response->assertOk()->assertHeaderContains('Cache-Control', 'no-store')->assertJsonPath('page', 2)->assertJsonPath('shown', 20)->assertJsonPath('total', 55);
         $html = $response->json('html');
-        $this->assertStringContainsString('Data 11', $html);
-        $this->assertStringContainsString('Data 20', $html);
-        $this->assertStringNotContainsString('Data 21', $html);
+        $this->assertStringContainsString('Data 45', $html);
+        $this->assertStringContainsString('Data 36', $html);
+        $this->assertStringNotContainsString('Data 35', $html);
         $this->assertSame(10, substr_count($html, '<tr>'));
     }
 }

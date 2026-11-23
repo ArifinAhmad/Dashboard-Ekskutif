@@ -117,7 +117,7 @@ class ReportController extends Controller
         $query = [
             'section_page' => [$sectionIndex => (int) $validated['page']],
             'section_sort' => [$sectionIndex => $validated['sort'] ?? null],
-            'section_direction' => [$sectionIndex => $validated['direction'] ?? 'asc'],
+            'section_direction' => [$sectionIndex => $validated['direction'] ?? null],
         ];
         $section = $this->paginateSections($result['sections'], $query)[$sectionIndex];
 
@@ -146,8 +146,10 @@ class ReportController extends Controller
         return collect($sections)->map(function (array $section, int $index) use ($query, $perPage): array {
             $rows = collect($section['rows']);
             $sortableColumns = array_keys($section['columns']);
-            $sortColumn = data_get($query, "section_sort.{$index}");
-            $sortDirection = data_get($query, "section_direction.{$index}", 'asc');
+            $requestedSortColumn = data_get($query, "section_sort.{$index}");
+            $sortColumn = filled($requestedSortColumn) ? $requestedSortColumn : $this->defaultSortColumn($section);
+            $requestedSortDirection = data_get($query, "section_direction.{$index}");
+            $sortDirection = filled($requestedSortDirection) ? $requestedSortDirection : (filled($requestedSortColumn) ? 'asc' : 'desc');
             if (in_array($sortColumn, $sortableColumns, true) && in_array($sortDirection, ['asc', 'desc'], true)) {
                 $rows = $rows->sort(function ($left, $right) use ($sortColumn, $sortDirection): int {
                     $leftValue = data_get($left, $sortColumn);
@@ -174,5 +176,19 @@ class ReportController extends Controller
 
             return $section;
         })->all();
+    }
+
+    private function defaultSortColumn(array $section): ?string
+    {
+        $columns = $section['columns'] ?? [];
+        $formats = $section['formats'] ?? [];
+
+        foreach (['stok', 'total', 'jumlah'] as $column) {
+            if (array_key_exists($column, $columns) && in_array($formats[$column] ?? null, ['number', 'currency'], true)) {
+                return $column;
+            }
+        }
+
+        return null;
     }
 }
